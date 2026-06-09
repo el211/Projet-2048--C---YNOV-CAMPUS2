@@ -1,0 +1,5 @@
+CompileFlags:
+  Add:
+    - -IC:/Users/elias/CLionProjects/untitled1/cmake-build-debug/_deps/sdl2-src/include
+    - -IC:/Users/elias/CLionProjects/untitled1/cmake-build-debug/_deps/sdl2-build/include
+    - -IC:/Users/elias/CLionProjects/untitled1/cmake-build-debug/_deps/sdl2-build/include/SDL2
