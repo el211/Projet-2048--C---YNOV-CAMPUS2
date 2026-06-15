@@ -1,3 +1,0 @@
-C:/Users/elias/CLionProjects/untitled1/build-2048/CMakeFiles/CMakeScratch/TryCompile-qxospk/CMakeFiles/cmTC_a00ae.dir
-C:/Users/elias/CLionProjects/untitled1/build-2048/CMakeFiles/CMakeScratch/TryCompile-qxospk/CMakeFiles/edit_cache.dir
-C:/Users/elias/CLionProjects/untitled1/build-2048/CMakeFiles/CMakeScratch/TryCompile-qxospk/CMakeFiles/rebuild_cache.dir

@@ -19,7 +19,12 @@ if(NOT SDL2_FOUND)
     FetchContent_MakeAvailable(SDL2)
 endif()
 
-add_executable(2048 main.c)
+add_executable(2048
+    main.c
+    grid.c
+    logic.c
+    render.c
+)
 
 # SDL2main must be linked before SDL2: it references SDL_* symbols that the
 # linker only resolves from libraries listed after it (left-to-right resolution).
