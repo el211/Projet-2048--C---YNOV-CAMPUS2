@@ -9,6 +9,7 @@
 #include "grid.h"
 #include "logic.h"
 #include "render.h"
+#include "animation.h"
 
 //cette fonction transforme une touche du clavier en direction de jeu
 //jai mis plusieur touche pour chaque sens : les fleches, le ZQSD (clavier fr) et le WASD (clavier us)
@@ -83,7 +84,12 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
     reset_game(&game);   //je lance une nouvelle partie
+
+    AnimationSystem anim;
+    animation_init(&anim); //je prepare le systeme d'animation (les tuiles de depart vont apparaitre)
+
     bool running = true; //tant que running est vrai le jeu tourne
+    Uint32 last_ticks = SDL_GetTicks(); //l'heure de la frame d'avant, pour calculer le temps ecoulé
 
     //ca c'est la boucle principale du jeu, elle tourne en boucle jusqua qu'on quitte
     while (running) {
@@ -98,7 +104,8 @@ int main(int argc, char *argv[]) {
                 if (key == SDLK_ESCAPE) {
                     running = false; //echap -> on quitte
                 } else if (key == SDLK_r || key == SDLK_n) {
-                    reset_game(&game); //R ou N -> on recommence une partie
+                    reset_game(&game);     //R ou N -> on recommence une partie
+                    animation_init(&anim); //je remet les anim a zero pour que les 2 nouvelle tuiles apparaissent
                 } else if (!game.game_over && !game.won) {
                     //on joue seulement si la partie est pas fini (ni gagner ni perdu)
                     MoveDirection direction;
@@ -109,7 +116,15 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        draw_game(renderer, &game); //je redessine l'ecran a chaque tour de boucle
+        //je calcule dt = le temps (en secondes) ecoulé depuis la frame d'avant
+        Uint32 now = SDL_GetTicks();
+        float dt = (now - last_ticks) / 1000.0f;
+        last_ticks = now;
+
+        animation_observe(&anim, &game); //je regarde ce qui a changer pour lancer les anim
+        animation_update(&anim, dt);     //je fait avancer les anim en cours
+
+        draw_game(renderer, &game, &anim); //je redessine l'ecran a chaque tour de boucle
         SDL_Delay(1); //petite pause pour pas que le programme prenne 100% du processeur
     }
 

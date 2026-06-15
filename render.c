@@ -121,7 +121,7 @@ static Color tile_color(int value) {
 }
 
 //cette fonction dessine TOUT l'ecran (c'est elle qu'on appelle depuis le main)
-void draw_game(struct SDL_Renderer *renderer, const Game *game) {
+void draw_game(struct SDL_Renderer *renderer, const Game *game, const AnimationSystem *anim) {
     fill_rect(renderer, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, (Color){250, 248, 239}); //le fond
 
     //je dessine le titre "2048" en haut a gauche
@@ -142,12 +142,23 @@ void draw_game(struct SDL_Renderer *renderer, const Game *game) {
             int x = BOARD_X + GAP + column * (TILE_SIZE + GAP);
             int y = BOARD_Y + GAP + row * (TILE_SIZE + GAP);
             int value = game->cells[row][column];
-            fill_rect(renderer, x, y, TILE_SIZE, TILE_SIZE, tile_color(value)); //le fond de la tuile
 
-            if (value != 0) { //si la case est pas vide jecrit le nombre dessus
+            //je dessine toujours le fond de la case vide (sinon on verrait a travers quand une tuile est petite)
+            fill_rect(renderer, x, y, TILE_SIZE, TILE_SIZE, tile_color(0));
+
+            if (value != 0) { //si la case est pas vide je dessine la tuile par dessus
+                //je recupere la taille de l'anim (1.0 = normal, plus petit = apparition, plus gros = pop)
+                float scale = animation_scale(anim, row, column);
+                int base = TILE_SIZE;            //la taille normale d'une tuile
+                int size = (int)(base * scale);  //la taille avec l'animation
+                //je recentre la tuile dans sa case pour qu'elle grossisse depuis le milieu
+                int ox = x + (TILE_SIZE - size) / 2;
+                int oy = y + (TILE_SIZE - size) / 2;
+                fill_rect(renderer, ox, oy, size, size, tile_color(value));
+
                 //texte foncé pour 2 et 4 (couleur claire) sinon texte clair
                 Color text = value <= 4 ? (Color){119, 110, 101} : (Color){249, 246, 242};
-                SDL_Rect tile_bounds = {x, y, TILE_SIZE, TILE_SIZE};
+                SDL_Rect tile_bounds = {ox, oy, size, size};
                 draw_number_centered(renderer, value, tile_bounds, 10, text);
             }
         }

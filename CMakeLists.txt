@@ -24,6 +24,7 @@ add_executable(2048
     grid.c
     logic.c
     render.c
+    animation.c
 )
 
 # SDL2main must be linked before SDL2: it references SDL_* symbols that the

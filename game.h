@@ -16,6 +16,7 @@ typedef enum {
     MOVE_DOWN
 } MoveDirection;
 
+
 //cette structure regroupe tout l'etat du jeu dans un seul truc
 //comme ca je passe juste un Game* aux fonction au lieu de plein de variable separer
 typedef struct {
