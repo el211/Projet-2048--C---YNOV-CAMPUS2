@@ -131,6 +131,21 @@ C'est la fonction la plus importante. Elle traite **une seule ligne/colonne** ra
    Important : une tuile ne fusionne **qu'une seule fois** par coup (le `++i` saute la tuile déjà fusionnée).
 3. On réécrit la ligne et on renvoie `true` si quelque chose a changé.
 
+#### ⚠️ Le point le plus difficile : éviter la double fusion
+
+C'est la partie qui m'a posé le plus de problème. La boucle a déjà son `++i` normal (celui du `for`).
+Quand deux tuiles fusionnent, je fais **un `++i` en plus**, donc au total j'avance de **2 cases** :
+je saute la tuile que je viens d'absorber dans la fusion.
+
+Exemple avec `[2, 2, 4]` :
+- `i = 0` : `compacted[0] = 2` et `compacted[1] = 2` → pareil → fusion → `4`, et `++i`
+  (donc `i` passe à 1, puis le `for` fait `++i` → `i = 2`)
+- `i = 2` : `compacted[2] = 4`, il n'y a rien après → pas de fusion → on recopie `4`
+- Résultat : `[4, 4]` ✅ (et **pas** `[8]`)
+
+Sans ce `++i` en plus, le `2` du milieu serait réutilisé et fusionnerait une deuxième fois → résultat faux.
+Le `++i` empêche donc qu'**une même tuile serve à deux fusions** dans le même coup.
+
 ### `move_tiles` — appliquer un déplacement à toute la grille
 
 Astuce de conception : **au lieu d'écrire 4 algorithmes** (gauche/droite/haut/bas), on **réutilise `process_line`** pour les 4 directions.
