@@ -1,8 +1,8 @@
-#include "grid.h"
+#include "game.h"
 
 #include <stdlib.h>
 
-//alloue la grille (tableau 2D de 4x4). renvoi false si une allocation rate
+//alloue la grille du jeu (tableau 2D de 4x4). renvoi false si une allocation rate
 bool game_init(Game *game) {
     //j'alloue d'abord le tableau principal (les 4 lignes)
     game->cells = malloc(GRID_SIZE * sizeof(*game->cells));

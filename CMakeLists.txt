@@ -21,7 +21,7 @@ endif()
 
 add_executable(2048
     main.c
-    grid.c
+    game.c
     logic.c
     render.c
     animation.c

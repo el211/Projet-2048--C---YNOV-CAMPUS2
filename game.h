@@ -26,4 +26,10 @@ typedef struct {
     bool game_over;  //true si y'a plus aucun coup possible
 } Game;
 
+//alloue la grille du jeu en memoire (tableau 2D de 4x4). renvoi false si une allocation rate
+bool game_init(Game *game);
+
+//libere la grille alloué par game_init
+void game_destroy(Game *game);
+
 #endif /* GAME_H */

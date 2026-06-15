@@ -6,7 +6,6 @@
 #include <time.h>
 
 #include "game.h"
-#include "grid.h"
 #include "logic.h"
 #include "render.h"
 #include "animation.h"

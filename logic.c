@@ -93,7 +93,7 @@ static bool process_line(int line[GRID_SIZE], int *score) {
 bool move_tiles(Game *game, MoveDirection direction) {
     bool changed = false;
 
-    //grosse astuce : au lieu de faire 4 code different (gauche/droite/haut/bas)
+    // au lieu de faire 4 code different (gauche/droite/haut/bas)
     //je reutilise process_line pour les 4 sens en lisant la grille dans le bon ordre
     for (int index = 0; index < GRID_SIZE; ++index) {
         int line[GRID_SIZE];
