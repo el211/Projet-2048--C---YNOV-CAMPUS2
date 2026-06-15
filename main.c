@@ -112,6 +112,23 @@ int main(int argc, char *argv[]) {
                         move_tiles(&game, direction); //je fait bouger les tuiles
                     }
                 }
+            } else if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+                //je recupere la position du clic de la souris
+                int mx = event.button.x;
+                int my = event.button.y;
+
+                //est-ce que le clic est dans le bouton "rejouer" du haut (toujours visible) ?
+                bool clic_reset = mx >= RESET_BTN_X && mx <= RESET_BTN_X + RESET_BTN_W &&
+                                  my >= RESET_BTN_Y && my <= RESET_BTN_Y + RESET_BTN_H;
+                //est-ce que le clic est dans le bouton de fin (seulement si la partie est finie) ?
+                bool clic_fin = (game.game_over || game.won) &&
+                                mx >= END_BTN_X && mx <= END_BTN_X + END_BTN_W &&
+                                my >= END_BTN_Y && my <= END_BTN_Y + END_BTN_H;
+
+                if (clic_reset || clic_fin) {
+                    reset_game(&game);     //on recommence une partie
+                    animation_init(&anim); //et on remet les anim a zero
+                }
             }
         }
 

@@ -34,9 +34,35 @@ static const uint8_t DIGITS[10][5] = {
     {0x7, 0x5, 0x7, 0x1, 0x7}
 };
 
+//comme pour les chiffre, jai dessiner a la main les lettres du mot "REJOUER" (R E J O U)
+//meme principe : 3 colone x 5 ligne, 3 bits par ligne
+static const uint8_t LETTERS[5][5] = {
+    {0x7, 0x5, 0x6, 0x5, 0x5}, //R
+    {0x7, 0x4, 0x7, 0x4, 0x7}, //E
+    {0x7, 0x1, 0x1, 0x5, 0x7}, //J
+    {0x7, 0x5, 0x5, 0x5, 0x7}, //O
+    {0x5, 0x5, 0x5, 0x5, 0x7}  //U
+};
+
+//les lettres du mot "REJOUER" sous forme d'indices dans le tableau LETTERS (R=0 E=1 J=2 O=3 U=4)
+static const int REJOUER[7] = {0, 1, 2, 3, 4, 1, 0};
+
 //petite fonction pour choisir la couleur du crayon avant de dessiner
 static void set_color(struct SDL_Renderer *renderer, Color color) {
     SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, 255);
+}
+
+//dessine un glyphe (un chiffre ou une lettre) a partir de ses 5 lignes de bits
+static void draw_glyph(struct SDL_Renderer *renderer, const uint8_t glyph[5], int x, int y, int scale, Color color) {
+    set_color(renderer, color);
+    for (int row = 0; row < 5; ++row) {
+        for (int column = 0; column < 3; ++column) {
+            if ((glyph[row] >> (2 - column)) & 1U) {
+                SDL_Rect pixel = {x + column * scale, y + row * scale, scale, scale};
+                SDL_RenderFillRect(renderer, &pixel);
+            }
+        }
+    }
 }
 
 //cette fonction dessine un rectangle plein d'une couleur (je m'en sert tout le temps)
@@ -46,18 +72,39 @@ static void fill_rect(struct SDL_Renderer *renderer, int x, int y, int w, int h,
     SDL_RenderFillRect(renderer, &rect);
 }
 
-//cette fonction dessine UN chiffre en lisant les bits du tableau DIGITS
+//cette fonction dessine UN chiffre (elle utilise draw_glyph avec le bon dessin dans DIGITS)
 static void draw_digit(struct SDL_Renderer *renderer, int digit, int x, int y, int scale, Color color) {
-    set_color(renderer, color);
-    for (int row = 0; row < 5; ++row) {     //5 ligne
-        for (int column = 0; column < 3; ++column) { //3 colone
-            //la je test si le bit est a 1, si oui je dessine un petit carré (scale = la taille)
-            if ((DIGITS[digit][row] >> (2 - column)) & 1U) {
-                SDL_Rect pixel = {x + column * scale, y + row * scale, scale, scale};
-                SDL_RenderFillRect(renderer, &pixel);
-            }
+    draw_glyph(renderer, DIGITS[digit], x, y, scale, color);
+}
+
+//ecrit le mot "REJOUER" bien centrer dans un rectangle (sert pour les boutons)
+static void draw_rejouer(struct SDL_Renderer *renderer, SDL_Rect bounds, int max_scale, Color color) {
+    int count = 7; //REJOUER = 7 lettres
+    int scale = max_scale;
+    int width;
+
+    //je reduit la taille tant que le mot rentre pas dans le bouton
+    do {
+        width = count * 3 * scale + (count - 1) * scale; //3 colone par lettre + 1 d'espace entre
+        if (width <= bounds.w - 12 && 5 * scale <= bounds.h - 8) {
+            break;
         }
+        --scale;
+    } while (scale > 1);
+
+    //je centre le mot dans le bouton
+    int x = bounds.x + (bounds.w - width) / 2;
+    int y = bounds.y + (bounds.h - 5 * scale) / 2;
+    for (int i = 0; i < count; ++i) {
+        draw_glyph(renderer, LETTERS[REJOUER[i]], x, y, scale, color);
+        x += 4 * scale; //je decale a droite pour la prochaine lettre
     }
+}
+
+//dessine un bouton (un rectangle de couleur) avec le mot "REJOUER" dessus
+static void draw_button(struct SDL_Renderer *renderer, SDL_Rect rect, int max_scale) {
+    fill_rect(renderer, rect.x, rect.y, rect.w, rect.h, (Color){142, 121, 102}); //fond marron du bouton
+    draw_rejouer(renderer, rect, max_scale, (Color){249, 246, 242});             //texte clair
 }
 
 //cette fonction compte combien y'a de chiffre dans un nombre (ex: 128 -> 3)
@@ -133,6 +180,10 @@ void draw_game(struct SDL_Renderer *renderer, const Game *game, const AnimationS
     SDL_Rect score_bounds = {348, 42, 174, 60};
     draw_number_centered(renderer, game->score, score_bounds, 7, (Color){255, 255, 255});
 
+    //le bouton "REJOUER" toujours visible (sous le score) pour recommencer quand on veut
+    SDL_Rect reset_btn = {RESET_BTN_X, RESET_BTN_Y, RESET_BTN_W, RESET_BTN_H};
+    draw_button(renderer, reset_btn, 5);
+
     //je dessine le grand plateau gris
     fill_rect(renderer, BOARD_X, BOARD_Y, BOARD_SIZE, BOARD_SIZE, (Color){187, 173, 160});
     //puis je parcour chaque case pour dessiner les tuiles
@@ -175,6 +226,10 @@ void draw_game(struct SDL_Renderer *renderer, const Game *game, const AnimationS
         SDL_Rect message = {BOARD_X + 80, BOARD_Y + 180, BOARD_SIZE - 160, 140};
         draw_number_centered(renderer, game->won ? 2048 : game->score, message, 18,
                              (Color){119, 110, 101});
+
+        //et un gros bouton "REJOUER" pour relancer une partie a la fin
+        SDL_Rect end_btn = {END_BTN_X, END_BTN_Y, END_BTN_W, END_BTN_H};
+        draw_button(renderer, end_btn, 9);
     }
 
     SDL_RenderPresent(renderer); //a la fin j'affiche tout a l'ecran d'un coup
