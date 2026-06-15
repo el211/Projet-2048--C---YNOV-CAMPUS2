@@ -4,11 +4,11 @@ Un jeu **2048** écrit en **C (standard C23)** avec la bibliothèque graphique *
 Le code est découpé en plusieurs modules pour la clarté.
 
 ```
-game.h              -> types partagés (Game, MoveDirection, GRID_SIZE)
-grid.c / grid.h     -> allocation mémoire de la grille
-logic.c / logic.h   -> règles du jeu (déplacements, fusions, victoire/défaite)
-render.c / render.h -> affichage à l'écran (SDL2)
-main.c              -> initialisation SDL, boucle principale, clavier
+game.c / game.h          -> types partagés (Game, MoveDirection, GRID_SIZE) + création/destruction du jeu (mémoire)
+logic.c / logic.h        -> règles du jeu (déplacements, fusions, victoire/défaite)
+render.c / render.h      -> affichage à l'écran (SDL2)
+animation.c / animation.h-> animations des tuiles (apparition + fusion)
+main.c                   -> initialisation SDL, boucle principale, clavier
 ```
 
 ## Compilation et lancement
@@ -35,9 +35,11 @@ Puis lancer l'exécutable :
 
 ---
 
-## 1. `game.h` — Le contrat commun
+## 1. `game.h` / `game.c` — Le contrat commun + la mémoire du jeu
 
-C'est le fichier inclus par tous les autres. Il définit les **types de base** du jeu.
+`game.h` est le fichier inclus par tous les autres : il définit les **types de base** du jeu et
+déclare les fonctions de création/destruction. `game.c` contient leur **implémentation** (l'allocation
+mémoire de la grille, voir la section 2).
 
 ```c
 #define GRID_SIZE 4
@@ -63,7 +65,7 @@ Une **structure** qui regroupe tout l'état du jeu dans un seul objet. On passe 
 
 ---
 
-## 2. `grid.c` — L'allocation mémoire
+## 2. `game.c` — L'allocation mémoire
 
 La grille est un **tableau 2D alloué dynamiquement** (`int **cells`), construit en **deux étages** :
 - étage 1 : un tableau de 4 pointeurs (les lignes)
@@ -211,14 +213,39 @@ Déroulé classique d'un programme SDL :
 1. `srand(time(NULL))` → initialise le générateur aléatoire (sinon les tuiles seraient identiques à chaque lancement).
 2. `SDL_Init` → initialise SDL. **Vérifié** (message d'erreur + sortie si échec).
 3. Création de la **fenêtre** et du **renderer**. Si le renderer accéléré échoue, on bascule sur le rendu logiciel (`SDL_RENDERER_SOFTWARE`) — robustesse.
-4. `game_init` → alloue la grille (avec gestion d'erreur), `reset_game` → lance la partie.
+4. `game_init` → alloue la grille (avec gestion d'erreur), `reset_game` → lance la partie, `animation_init` → prépare les animations.
 5. **Boucle principale** (`while running`) :
    - `SDL_PollEvent` lit les événements (fermeture, touches),
    - `Échap` quitte, `R`/`N` recommence, une flèche/ZQSD/WASD joue un coup,
+   - on calcule `dt` (temps écoulé via `SDL_GetTicks`), puis `animation_observe` + `animation_update` font vivre les animations,
    - `draw_game` redessine, `SDL_Delay(1)` évite d'utiliser 100 % du CPU.
 6. À la fin : `game_destroy` (libère la mémoire) puis on détruit renderer/fenêtre et `SDL_Quit`.
 
 > Remarque : **chaque ressource créée est libérée**, et dans le bon ordre (renderer → fenêtre → SDL). En cas d'erreur en cours d'init, on nettoie aussi ce qui a déjà été créé.
+
+---
+
+## 6. `animation.c` — Les animations des tuiles
+
+Ce module ajoute deux petits effets : une tuile qui **apparaît** (elle grossit de 0 jusqu'à sa taille
+avec un léger rebond) et une **fusion** (un petit « pop » : la tuile grossit puis revient).
+
+L'idée maligne : au lieu de modifier la logique du jeu, le module **compare la grille à la frame
+précédente** pour deviner ce qui a changé. Du coup `logic.c` n'est **pas touché**.
+
+- `animation_observe` : compare la grille actuelle à la précédente.
+  - une case qui passe de `0` à une valeur → animation **d'apparition** (`ANIM_SPAWN`),
+  - une case dont la valeur change alors qu'il y avait déjà une tuile → animation de **fusion** (`ANIM_MERGE`).
+- `animation_update(dt)` : fait avancer le minuteur de chaque animation et la coupe quand elle est finie.
+  `dt` est le temps écoulé depuis la frame précédente (calculé dans `main.c` avec `SDL_GetTicks`).
+- `animation_scale` : renvoie le **facteur de taille** à appliquer à une tuile (1.0 = taille normale,
+  plus petit pendant l'apparition, un peu plus gros pendant le pop).
+
+Côté affichage, `draw_game` dessine toujours le fond de la case puis la tuile **redimensionnée** selon
+`animation_scale`, recentrée pour qu'elle grossisse depuis le milieu.
+
+> Avantage de ce découpage : les animations sont **isolées** dans leur propre module et ne dépendent
+> que de l'état du jeu — on pourrait les enlever sans rien casser.
 
 ---
 
