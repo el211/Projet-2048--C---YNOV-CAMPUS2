@@ -19,6 +19,7 @@ typedef struct {
     int prev[GRID_SIZE][GRID_SIZE];        //la grille telle qu'elle etait a la frame d'avant
     float timer[GRID_SIZE][GRID_SIZE];     //depuis combien de temps l'anim de la case tourne (en secondes)
     AnimType type[GRID_SIZE][GRID_SIZE];   //le type d'anim de chaque case
+    float idle_time;                       //depuis combien de temps rien ne bouge (pour le battement de coeur)
 } AnimationSystem;
 
 //remet le systeme d'anim a zero (a appeler au debut et quand on recommence une partie)
